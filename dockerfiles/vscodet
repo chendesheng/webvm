@@ -5,7 +5,7 @@
 # container is exported to ext2 by the WebVM Deploy workflow.
 FROM --platform=linux/amd64 debian:bookworm AS build
 ARG DEBIAN_FRONTEND=noninteractive
-ARG VSCODET_REF=f4c2f5130d346d1a866f2f1ff7e975a51b939571
+ARG VSCODET_REF=9efc9b7ff2933a849ed2d15892c3b83da996bde0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git xz-utils \
