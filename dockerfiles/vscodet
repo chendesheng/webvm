@@ -56,4 +56,6 @@ ENV HOME="/home/user" \
 
 # The WebVM Deploy workflow extracts CMD[0] as the executable and CMD[1:] as
 # args. The app's argument parser accepts --user-data-dir before the folder.
-CMD ["/usr/local/bin/vscodet", "--user-data-dir", "/home/user/.vscodet", "/workspace", "/workspace/demo.ts"]
+# Debug entrypoint: the image can be inspected from a real shell before the
+# TUI is launched manually.
+CMD ["/bin/bash"]
