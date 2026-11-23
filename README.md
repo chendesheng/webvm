@@ -246,3 +246,17 @@ The public CheerpX deployment is provided **as-is** and is **free to use** for t
 Read more [here](https://cheerpx.io/docs/licensing) about our licensing practices.
 
 If you want to build a product on top of CheerpX/WebVM, please see our other licensing options: [CheerpX licensing](https://cheerpx.io/licensing) or get in touch: sales@leaningtech.com
+
+## vscodeT demo image
+
+The `dockerfiles/vscodet` image runs the native vscodeT TUI on a 32-bit Debian
+userland. It is built by the standard Deploy workflow:
+
+```text
+DOCKERFILE_PATH=dockerfiles/vscodet
+IMAGE_SIZE=750M
+DEPLOY_TO_GITHUB_PAGES=true
+```
+
+The TUI is powered by CheerpX; see the CheerpX Community License for the
+individual/FOSS terms and keep the "Powered by CheerpX" credit visible.

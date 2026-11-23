@@ -1,0 +1,8 @@
+{
+  "name": "vscodet-webvm-demo",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start": "echo 'vscodeT is running as the terminal UI'"
+  }
+}

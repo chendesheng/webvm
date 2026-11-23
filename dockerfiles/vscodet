@@ -1,0 +1,66 @@
+# vscodeT in WebVM: a 32-bit i386 Debian image whose CMD is the native TUI.
+#
+# The app is cross-compiled on the amd64 builder stage, then copied into an
+# i386 buster userland (WebVM/CheerpX only runs 32-bit x86 images). The final
+# container is exported to ext2 by the WebVM Deploy workflow.
+FROM --platform=linux/amd64 debian:bookworm AS build
+ARG DEBIAN_FRONTEND=noninteractive
+ARG VSCODET_REF=f4c2f5130d346d1a866f2f1ff7e975a51b939571
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl git xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -fsSL https://ziglang.org/download/0.17.1/zig-x86_64-linux-0.17.1.tar.xz \
+      -o /tmp/zig.tar.xz \
+    && echo "3581863e3cbcfd0fce0efc682ce7e9e93da96668a977791d356a26d2a7e9b17a  /tmp/zig.tar.xz" \
+      | sha256sum -c - \
+    && tar -xJf /tmp/zig.tar.xz -C /opt \
+    && ln -s /opt/zig-x86_64-linux-0.17.1/zig /usr/local/bin/zig
+
+RUN git clone --recurse-submodules --shallow-submodules \
+      https://github.com/chendesheng/vscodeT.git /src \
+    && cd /src \
+    && git checkout "$VSCODET_REF"
+
+WORKDIR /src
+RUN scripts/build-onig-i386.sh /src/i386-onig
+RUN zig build -Dtarget=x86-linux-musl -Doptimize=ReleaseSmall \
+      -Donig-include=/src/third_party/oniguruma/src \
+      -Donig-lib=/src/i386-onig
+RUN ls -l /src/zig-out/bin/zig
+
+FROM --platform=linux/i386 i386/debian:buster
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Buster is EOL; use the archived mirrors like WebVM's debian_mini image.
+RUN echo "deb [trusted=yes] http://archive.debian.org/debian buster main contrib non-free" \
+      > /etc/apt/sources.list \
+    && echo "deb [trusted=yes] http://archive.debian.org/debian-security buster/updates main" \
+      >> /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends bash coreutils util-linux ca-certificates passwd \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd -m -u 1000 user
+
+COPY --from=build /src/zig-out/bin/zig /usr/local/bin/vscodet
+COPY dockerfiles/vscodet-workspace /workspace
+
+RUN chmod 0755 /usr/local/bin/vscodet \
+    && chown -R user:user /workspace \
+    && mkdir -p /home/user/.vscodet \
+    && chown -R user:user /home/user/.vscodet
+
+WORKDIR /workspace
+ENV HOME="/home/user" \
+    USER="user" \
+    SHELL="/bin/bash" \
+    TERM="xterm-256color" \
+    LANG="C.UTF-8" \
+    LC_ALL="C.UTF-8"
+
+# The WebVM Deploy workflow extracts CMD[0] as the executable and CMD[1:] as
+# args. The app's argument parser accepts --user-data-dir before the folder.
+CMD ["/usr/local/bin/vscodet", "--user-data-dir", "/home/user/.vscodet", "/workspace", "/workspace/demo.ts"]
