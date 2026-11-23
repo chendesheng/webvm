@@ -5,7 +5,7 @@
 # container is exported to ext2 by the WebVM Deploy workflow.
 FROM --platform=linux/amd64 debian:bookworm AS build
 ARG DEBIAN_FRONTEND=noninteractive
-ARG VSCODET_REF=8968c1f898a3e53703998290ba09918a8e00609a
+ARG VSCODET_REF=afe8ae29356583f9f740430e42946784dea03e7c
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git xz-utils \
@@ -56,4 +56,4 @@ ENV HOME="/home/user" \
 
 # The WebVM Deploy workflow extracts CMD[0] as the executable and CMD[1:] as
 # args. The app's argument parser accepts --user-data-dir before the folder.
-CMD ["/usr/local/bin/vscodet", "--user-data-dir", "/home/user/.vscodet", "--logsPath", "/tmp/vscodet-logs", "/workspace", "/workspace/demo.ts"]
+CMD ["/usr/local/bin/vscodet", "--user-data-dir", "/home/user/.vscodet", "/workspace", "/workspace/demo.ts"]
