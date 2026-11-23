@@ -5,7 +5,7 @@
 # container is exported to ext2 by the WebVM Deploy workflow.
 FROM --platform=linux/amd64 debian:bookworm AS build
 ARG DEBIAN_FRONTEND=noninteractive
-ARG VSCODET_REF=9efc9b7ff2933a849ed2d15892c3b83da996bde0
+ARG VSCODET_REF=fa4beab71398c3451296ff8bfc1c7088dbbebdc7
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ca-certificates curl git xz-utils \
@@ -38,13 +38,13 @@ ARG DEBIAN_FRONTEND=noninteractive
 # directly and keep the tree owned by it.
 RUN echo 'user:x:1000:1000:user:/home/user:/bin/bash' >> /etc/passwd \
     && echo 'user:x:1000:' >> /etc/group \
-    && mkdir -p /home/user/.vscodet /workspace
+    && mkdir -p /home/user/.vscodet /tmp/vscodet-logs /workspace
 
 COPY --from=build /src/zig-out/bin/zig /usr/local/bin/vscodet
 COPY dockerfiles/vscodet-workspace /workspace
 
 RUN chmod 0755 /usr/local/bin/vscodet \
-    && chown -R 1000:1000 /home/user /workspace /usr/local/bin/vscodet
+    && chown -R 1000:1000 /home/user /tmp/vscodet-logs /workspace /usr/local/bin/vscodet
 
 WORKDIR /workspace
 ENV HOME="/home/user" \
@@ -56,4 +56,4 @@ ENV HOME="/home/user" \
 
 # The WebVM Deploy workflow extracts CMD[0] as the executable and CMD[1:] as
 # args. The app's argument parser accepts --user-data-dir before the folder.
-CMD ["/usr/local/bin/vscodet", "--user-data-dir", "/home/user/.vscodet", "/workspace", "/workspace/demo.ts"]
+CMD ["/usr/local/bin/vscodet", "--user-data-dir", "/home/user/.vscodet", "--logsPath", "/tmp/vscodet-logs", "/workspace", "/workspace/demo.ts"]
